@@ -1,9 +1,29 @@
-﻿# Productivity Dashboard
+# Productivity Dashboard
 
 A full-stack personal productivity app built with **React + Vite** (frontend) and **Express.js** (backend).
 It features 5 interactive tools accessible from a single dashboard landing page.
 
 ---
+
+## Screenshots
+
+### Dashboard
+![Dashboard](./assets/dashboard.png)
+
+### Feature 1 - To-Do List
+![To-Do List](./assets/todo-list.png)
+
+### Feature 2 - Daily Planner
+![Daily Planner](./assets/daily-planner.png)
+
+### Feature 3 - Pomodoro Timer
+![Pomodoro Timer](./assets/pomodoro.png)
+
+### Feature 4 - Motivation
+![Motivation](./assets/motivation.png)
+
+---
+
 
 ## Tech Stack
 
