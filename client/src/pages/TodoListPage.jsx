@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../components/Header';
-import AddTaskForm from '../components/AddTaskForm';
-import TodoCard from '../components/TodoCard';
+import { useNavigate } from 'react-router-dom';
 import { fetchTodos, createTodo, updateTodo, deleteTodo } from '../services/api';
-import { Search } from 'lucide-react';
 
 function TodoListPage() {
+  const navigate = useNavigate();
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('all'); // all | pending | completed | important
-  const [searchQuery, setSearchQuery] = useState('');
+
+  // Form states matching original design
+  const [title, setTitle] = useState('');
+  const [details, setDetails] = useState('');
+  const [isImportant, setIsImportant] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const loadTodos = async () => {
     try {
@@ -20,7 +22,7 @@ function TodoListPage() {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError('Failed to load tasks from server');
+      setError('Failed to load tasks');
     } finally {
       setLoading(false);
     }
@@ -30,18 +32,31 @@ function TodoListPage() {
     loadTodos();
   }, []);
 
-  const handleAddTask = async (newTaskData) => {
+  const handleAddTask = async (e) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    setSubmitting(true);
     try {
-      const created = await createTodo(newTaskData);
+      const created = await createTodo({
+        title,
+        details,
+        isImportant
+      });
       setTodos(prev => [created, ...prev]);
+      setTitle('');
+      setDetails('');
+      setIsImportant(false);
     } catch (err) {
       alert(err.message || 'Error adding task');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleToggleComplete = async (id, isCompleted) => {
+  const handleToggleComplete = async (id, currentStatus) => {
     try {
-      const updated = await updateTodo(id, { isCompleted });
+      const updated = await updateTodo(id, { isCompleted: !currentStatus });
       setTodos(prev => prev.map(t => (t.id === id ? updated : t)));
     } catch (err) {
       alert('Failed to update task status');
@@ -58,107 +73,95 @@ function TodoListPage() {
     }
   };
 
-  // Filter & Search Logic
-  const filteredTodos = todos.filter(todo => {
-    // Search query filter
-    const matchesSearch =
-      todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (todo.details && todo.details.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    if (!matchesSearch) return false;
-
-    if (activeFilter === 'pending') return !todo.isCompleted;
-    if (activeFilter === 'completed') return todo.isCompleted;
-    if (activeFilter === 'important') return todo.isImportant;
-    return true;
-  });
-
   return (
-    <div className="page-container">
-      <Header />
+    <div className="fullElem active todo-list-page">
+      <button className="back" onClick={() => navigate('/')} title="Close">
+        &times;
+      </button>
 
-      <div className="dashboard-grid">
-        <div className="sidebar">
-          <AddTaskForm onAddTask={handleAddTask} />
+      <h2>Your Personalized Task List</h2>
+
+      <div className="todo-container">
+        <div className="addTask">
+          <form onSubmit={handleAddTask}>
+            <input
+              type="text"
+              id="task"
+              placeholder="Enter Task"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+            <textarea
+              placeholder="Enter Details"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+            />
+            <div className="mark-imp">
+              <input
+                type="checkbox"
+                id="check"
+                checked={isImportant}
+                onChange={(e) => setIsImportant(e.target.checked)}
+              />
+              <label htmlFor="check">Mark as Important!</label>
+            </div>
+            <button type="submit" disabled={submitting}>
+              {submitting ? 'Adding...' : 'Add Task'}
+            </button>
+          </form>
         </div>
 
-        <div className="main-content">
-          <div className="tasks-section">
-            <div className="tasks-header">
-              <h2>Your Todo List ({filteredTodos.length})</h2>
-              <div className="filters-bar">
-                <button
-                  className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => setActiveFilter('all')}
-                >
-                  All Tasks
-                </button>
-                <button
-                  className={`filter-btn ${activeFilter === 'pending' ? 'active' : ''}`}
-                  onClick={() => setActiveFilter('pending')}
-                >
-                  Pending
-                </button>
-                <button
-                  className={`filter-btn ${activeFilter === 'completed' ? 'active' : ''}`}
-                  onClick={() => setActiveFilter('completed')}
-                >
-                  Completed
-                </button>
-                <button
-                  className={`filter-btn ${activeFilter === 'important' ? 'active' : ''}`}
-                  onClick={() => setActiveFilter('important')}
-                >
-                  Important ⭐
-                </button>
-              </div>
+        <div className="allTask">
+          {loading ? (
+            <div className="loading-spinner">Loading tasks...</div>
+          ) : error ? (
+            <div style={{ color: '#ef5350', fontSize: '1.2rem', padding: '20px' }}>
+              {error} - Make sure Express server is running on http://localhost:5000
             </div>
-
-            <div className="search-box">
-              <div style={{ position: 'relative' }}>
-                <Search
-                  size={18}
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    opacity: 0.6
-                  }}
-                />
-                <input
-                  type="text"
-                  className="form-input"
-                  style={{ paddingLeft: '44px' }}
-                  placeholder="Search tasks by title or notes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          ) : todos.length === 0 ? (
+            <div style={{ opacity: 0.8, fontSize: '1.2rem' }}>No tasks added yet.</div>
+          ) : (
+            todos.map(todo => (
+              <div
+                key={todo.id}
+                className={`task ${todo.isCompleted ? 'task-completed' : ''}`}
+              >
+                <h5>
+                  {todo.title}
+                  {todo.isImportant && <span className="true">★ Important</span>}
+                </h5>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleComplete(todo.id, todo.isCompleted)}
+                    style={{
+                      backgroundColor: todo.isCompleted ? '#757575' : '#2e7d32',
+                      color: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {todo.isCompleted ? 'Completed' : 'Mark as Completed'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(todo.id)}
+                    style={{
+                      backgroundColor: '#c62828',
+                      color: 'white',
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {loading ? (
-              <div className="loading-spinner">Loading tasks from Express server...</div>
-            ) : error ? (
-              <div className="empty-state" style={{ color: '#ef5350' }}>{error}</div>
-            ) : filteredTodos.length === 0 ? (
-              <div className="empty-state">
-                <h3>No tasks found</h3>
-                <p>Try creating a new task or resetting your search filter.</p>
-              </div>
-            ) : (
-              <div className="todo-list">
-                {filteredTodos.map(todo => (
-                  <TodoCard
-                    key={todo.id}
-                    todo={todo}
-                    onToggleComplete={handleToggleComplete}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            ))
+          )}
         </div>
       </div>
     </div>
