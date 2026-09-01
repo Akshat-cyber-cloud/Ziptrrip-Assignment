@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import todoRoutes from './routes/todoRoutes.js';
 
-dotenv.config({ path: '../.env' });
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
