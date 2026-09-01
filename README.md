@@ -22,6 +22,9 @@ It features 5 interactive tools accessible from a single dashboard landing page.
 ### Feature 4 - Motivation
 ![Motivation](./assets/motivation.png)
 
+### Feature 5 - Daily Goals Tracker
+![Daily Goals Tracker](./assets/daily-goals.png)
+
 ---
 
 
