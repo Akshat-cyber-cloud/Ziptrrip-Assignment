@@ -1,0 +1,32 @@
+[
+  {
+    "id": "todo-1",
+    "title": "Complete Project Presentation",
+    "details": "Prepare slides for the upcoming client meeting including dashboard features and architecture overview.",
+    "isCompleted": false,
+    "isImportant": true,
+    "category": "Work",
+    "createdAt": "2026-09-01T10:00:00.000Z",
+    "dueDate": "2026-09-05"
+  },
+  {
+    "id": "todo-2",
+    "title": "Design System Review",
+    "details": "Review color tokens, typography hierarchy (Aeonik font), and glassmorphic UI components.",
+    "isCompleted": true,
+    "isImportant": false,
+    "category": "Design",
+    "createdAt": "2026-09-01T11:30:00.000Z",
+    "dueDate": "2026-09-02"
+  },
+  {
+    "id": "todo-3",
+    "title": "Setup Express API Endpoints",
+    "details": "Implement CRUD endpoints for managing tasks and single todo detail queries.",
+    "isCompleted": false,
+    "isImportant": true,
+    "category": "Development",
+    "createdAt": "2026-09-01T12:00:00.000Z",
+    "dueDate": "2026-09-03"
+  }
+]
